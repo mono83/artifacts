@@ -50,3 +50,10 @@ For further information and configuration options run `app test --help`
 ## Running daemon
 
 `app serve` to run server, `app serve --help` for more information and configuration options.
+
+### Limitations
+
+1. Despite queries are stored in database, no hot reload yet supported. To refresh active queries
+   restart is required.
+2. No locking applied - if two or more instances of this application are running for same settings,
+   there will be data duplication.
