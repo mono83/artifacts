@@ -1,0 +1,12 @@
+# MySQL database DSN
+mysql: root:root@tcp(127.0.0.1:3306)/
+
+# MySQL table that holds artifacts configuration
+table: __artifacts
+
+# InfluxDB UDP listener address
+influx: 127.0.0.1:8089
+
+# Default artifacts reschedule interval used
+# if artifact has no configured interval
+scheduleSeconds: 120

@@ -11,7 +11,7 @@ var testCmd = &cobra.Command{
 	Short: "Runs all artifact queries sequentially",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		// Establishing connection to MySQL database
-		conn, artifacts, err := mysql()
+		_, conn, artifacts, err := configure()
 		if err != nil {
 			return err
 		}

@@ -16,6 +16,7 @@ CREATE TABLE `__artifacts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ```
 3. Fill some data to table
+4. Create configuration file `config.yaml`. Take a look to `config.yaml.dist` for syntax
 
 ## Query format
 

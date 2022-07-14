@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"github.com/mono83/artifacts/data"
 	"github.com/mono83/artifacts/db"
 	"github.com/mono83/artifacts/influx"
@@ -13,23 +12,13 @@ import (
 	"time"
 )
 
-var (
-	flagInfluxDB            string
-	flagDefaultScheduleTime time.Duration
-)
-
 var serveCmd = &cobra.Command{
 	Use:     "serve",
 	Aliases: []string{"start", "daemon"},
 	Short:   "Starts daemon that will perform regular artifact data read",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		if len(flagInfluxDB) == 0 {
-			return errors.New("empty InfluxDB listener address")
-		}
-		xray.BOOT.Info("Using InfluxDB :addr", args.Addr(flagInfluxDB))
-
 		// Establishing connection to MySQL database
-		conn, artifacts, err := mysql()
+		cnf, conn, artifacts, err := configure()
 		if err != nil {
 			return err
 		}
@@ -40,7 +29,7 @@ var serveCmd = &cobra.Command{
 		for _, a := range artifacts {
 			initialWait := time.Duration(rand.Intn(len(artifacts)*1000)) * time.Millisecond
 			go func(wait time.Duration, a data.Artifact) {
-				delay := a.IntervalOrDefault(flagDefaultScheduleTime)
+				delay := a.IntervalOrDefault(cnf.ScheduleOrDefault())
 				xray.BOOT.Info("Using initial wait :elapsed for :name to avoid startup load", args.Elapsed(wait), args.Name(a.Metric))
 				time.Sleep(wait)
 				for {
@@ -50,7 +39,7 @@ var serveCmd = &cobra.Command{
 					if err != nil {
 						ray.Error("Error obtaining data for :name - :err", args.Error{Err: err})
 					} else {
-						err = influx.Send(flagInfluxDB, results)
+						err = influx.Send(cnf.InfluxDBAddr, results)
 						if err != nil {
 							ray.Error("Error sending data to InfluxDB - :err", args.Error{Err: err})
 						}
@@ -65,21 +54,4 @@ var serveCmd = &cobra.Command{
 		wg.Wait()
 		return nil
 	},
-}
-
-func init() {
-	serveCmd.Flags().StringVarP(
-		&flagInfluxDB,
-		"influxdb",
-		"i",
-		"",
-		"InfluxDB UDP listener address",
-	)
-	serveCmd.Flags().DurationVarP(
-		&flagDefaultScheduleTime,
-		"schedule",
-		"s",
-		2*time.Minute,
-		"Default schedule interval for metrics",
-	)
 }
