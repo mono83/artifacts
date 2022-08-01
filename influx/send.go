@@ -2,7 +2,6 @@ package influx
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/mono83/artifacts/data"
 	"net"
 	"strconv"
@@ -47,7 +46,6 @@ func sendSingleTable(conn net.Conn, t data.ResultsTable) error {
 		b.WriteString(strconv.FormatInt(row.Value, 10))
 		b.WriteRune('\n')
 	}
-	fmt.Println(b)
 	_, err := conn.Write(b.Bytes())
 	return err
 }
