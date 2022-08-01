@@ -9,7 +9,7 @@ import (
 )
 
 // Read reads artifact data from database
-func Read(db *sql.DB, a data.Artifact) ([]data.Result, error) {
+func Read(db *sql.DB, a data.Artifact) (*data.ResultsTable, error) {
 	if db == nil {
 		return nil, errors.New("nil database")
 	}
@@ -33,7 +33,10 @@ func Read(db *sql.DB, a data.Artifact) ([]data.Result, error) {
 		return nil, err
 	}
 
-	var out []data.Result
+	var out = data.ResultsTable{
+		Metric: a.Metric,
+		Groups: cols[0 : len(cols)-1],
+	}
 	for rows.Next() {
 		groups := make([]string, len(cols)-1)
 		var value int64 = 0
@@ -55,8 +58,8 @@ func Read(db *sql.DB, a data.Artifact) ([]data.Result, error) {
 			}
 		}
 
-		out = append(out, data.Result{Metric: a.Metric, Value: value, Group: group})
+		out.Add(value, groups...)
 	}
 
-	return out, nil
+	return &out, nil
 }
