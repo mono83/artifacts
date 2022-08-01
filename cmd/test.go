@@ -24,13 +24,13 @@ var testCmd = &cobra.Command{
 				x.Query,
 			)
 
-			fetchedData, err := db.Read(conn, x)
+			table, err := db.Read(conn, x)
 			if err != nil {
 				fmt.Println("     ERROR: ", err)
 			} else {
-				for _, datum := range fetchedData {
-					if len(datum.Group) > 0 {
-						fmt.Println("    ", datum.Value, datum.Group)
+				for _, datum := range table.Rows {
+					if len(datum.Groups) > 0 {
+						fmt.Println("    ", datum.Value, datum.Groups)
 					} else {
 						fmt.Println("    ", datum.Value)
 					}

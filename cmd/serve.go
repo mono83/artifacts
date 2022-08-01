@@ -39,7 +39,10 @@ var serveCmd = &cobra.Command{
 					if err != nil {
 						ray.Error("Error obtaining data for :name - :err", args.Error{Err: err})
 					} else {
-						err = influx.Send(cnf.InfluxDBAddr, results)
+						var toSend []data.ResultsTable
+						toSend = append(toSend, *results)
+						toSend = append(toSend, results.Recombine()...)
+						err = influx.Send(cnf.InfluxDBAddr, toSend)
 						if err != nil {
 							ray.Error("Error sending data to InfluxDB - :err", args.Error{Err: err})
 						}

@@ -2,6 +2,7 @@ package influx
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/mono83/artifacts/data"
 	"net"
 	"strconv"
@@ -9,33 +10,45 @@ import (
 )
 
 // Send sends data to influxdb using udp
-func Send(addr string, results []data.Result) error {
-	if len(results) == 0 {
+func Send(addr string, tables []data.ResultsTable) error {
+	if len(tables) == 0 {
 		return nil
 	}
-	// Building data to send
-	b := bytes.NewBuffer(nil)
-	for _, result := range results {
-		b.WriteString(result.Metric)
-		if len(result.Group) > 0 {
-			for k, v := range result.Group {
-				b.WriteRune(',')
-				b.Write(Sanitize(k))
-				b.WriteRune('=')
-				b.Write(Sanitize(v))
-			}
-		}
-		b.WriteString(" value=")
-		b.WriteString(strconv.FormatInt(result.Value, 10))
-		b.WriteRune('\n')
-	}
-
+	// Dialing
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-	_, err = conn.Write(b.Bytes())
+
+	// Sending data
+	for _, t := range tables {
+		if err := sendSingleTable(conn, t); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func sendSingleTable(conn net.Conn, t data.ResultsTable) error {
+	b := bytes.NewBuffer(nil)
+	for _, row := range t.Rows {
+		b.WriteString(t.Metric)
+		if len(t.Groups) > 0 {
+			for k, v := range row.Groups {
+				b.WriteRune(',')
+				b.Write(Sanitize(t.Groups[k]))
+				b.WriteRune('=')
+				b.Write(Sanitize(v))
+			}
+		}
+		b.WriteString(" value=")
+		b.WriteString(strconv.FormatInt(row.Value, 10))
+		b.WriteRune('\n')
+	}
+	fmt.Println(b)
+	_, err := conn.Write(b.Bytes())
 	return err
 }
 
